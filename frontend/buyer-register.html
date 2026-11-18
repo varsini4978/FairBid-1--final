@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Buyer Registration – FairBid</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="navbar">
+    <div class="nav-container">
+      <a href="index.html" class="brand">
+        <svg class="brand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        FairBid
+      </a>
+      <nav class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="buyer-login.html">Already Registered? Sign In</a>
+      </nav>
+    </div>
+  </header>
+
+  <main style="max-width: 650px; padding-top: 2rem;">
+    <div class="card" style="padding: 2.25rem;">
+      <div style="text-align: center; margin-bottom: 2rem;">
+        <span class="badge badge-sold" style="margin-bottom: 0.75rem;">Buyer Registration</span>
+        <h1 style="font-size: 1.75rem; font-weight: 800;">Register as Commercial Buyer</h1>
+        <p style="color: var(--text-secondary); font-size: 0.95rem; margin-top: 0.35rem;">
+          Procure authentic, verified agricultural produce directly from source
+        </p>
+      </div>
+
+      <form id="buyer-register-form">
+        <input type="hidden" id="role" value="BUYER">
+
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label" for="fullName">Representative Full Name *</label>
+            <input type="text" id="fullName" class="form-control" placeholder="e.g. Priya Sharma" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="email">Business Email Address *</label>
+            <input type="email" id="email" class="form-control" placeholder="e.g. priya@agrobuyers.com" required>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label" for="password">Password * (min 8 chars, 1 letter, 1 number)</label>
+            <input type="password" id="password" class="form-control" placeholder="••••••••" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="phone">Contact Phone (10 digits) *</label>
+            <input type="tel" id="phone" class="form-control" placeholder="e.g. 9123456780" required>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label" for="businessName">Registered Business Name *</label>
+            <input type="text" id="businessName" class="form-control" placeholder="e.g. Priya Agro Traders Pvt Ltd" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="buyerType">Buyer Category *</label>
+            <select id="buyerType" class="form-control" required>
+              <option value="Wholesale Distributor">Wholesale Distributor</option>
+              <option value="Food Processor">Food Processor</option>
+              <option value="Retail Chain">Retail Chain</option>
+              <option value="Exporter">International Exporter</option>
+              <option value="Institutional Buyer">Institutional Buyer</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="location">Operating City / State *</label>
+          <input type="text" id="location" class="form-control" placeholder="e.g. Chennai, Tamil Nadu" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-lg" style="width: 100%; margin-top: 1rem;" id="reg-submit">
+          Create Buyer Account
+        </button>
+      </form>
+
+      <div style="text-align: center; margin-top: 1.5rem; font-size: 0.9rem; color: var(--text-secondary);">
+        Already have a Buyer account? <a href="buyer-login.html" style="color: var(--primary); font-weight: 600;">Sign in here</a>
+      </div>
+    </div>
+  </main>
+
+  <script src="js/api.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/register.js"></script>
+</body>
+</html>

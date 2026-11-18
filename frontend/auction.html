@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Live Auction Room – FairBid</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="navbar">
+    <div class="nav-container">
+      <a href="index.html" class="brand">
+        <svg class="brand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        FairBid
+      </a>
+      <nav class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="browse-produce.html">Live Auctions</a>
+        <div id="nav-user-slot" style="display: flex; align-items: center; gap: 0.75rem;"></div>
+      </nav>
+    </div>
+  </header>
+
+  <main style="max-width: 1000px;">
+    <!-- Produce Lot Header -->
+    <div class="card" style="margin-bottom: 1.5rem; padding: 1.5rem;">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem;">
+        <div style="display: flex; align-items: center; gap: 1.25rem;">
+          <img id="crop-img" src="assets/images/default-crop.svg" alt="Crop" style="width: 64px; height: 64px; object-fit: contain;">
+          <div>
+            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
+              <h1 id="crop-name" style="font-size: 1.6rem; font-weight: 800;">Loading Produce...</h1>
+              <span id="round-badge" class="badge badge-open">Round 1</span>
+            </div>
+            <div id="lot-meta" style="color: var(--text-secondary); font-size: 0.95rem;">
+              Loading metadata...
+            </div>
+          </div>
+        </div>
+        <div style="text-align: right;">
+          <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Reserve Minimum Price</div>
+          <div id="min-price" style="font-size: 1.4rem; font-weight: 800; color: var(--text-primary);">-</div>
+          <div id="farmer-actions-slot" style="margin-top: 0.5rem;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Spotlight Banner: Highest Bid & Countdown -->
+    <section class="spotlight-box">
+      <div class="spotlight-label">Current Highest Valid Bid</div>
+      <div class="spotlight-amount" id="highest-bid-display">Loading...</div>
+      <div style="display: flex; justify-content: center; align-items: center; gap: 1rem; margin-top: 0.75rem; flex-wrap: wrap;">
+        <span class="countdown-box" id="countdown-display" style="font-size: 1.1rem; padding: 0.5rem 1rem;">
+          ⏳ Synchronizing timer...
+        </span>
+        <span style="font-size: 0.9rem; opacity: 0.9;" id="bid-count-display">0 bids placed</span>
+      </div>
+    </section>
+
+    <!-- Bidding Form / Status Card -->
+    <div class="grid-2" style="margin-bottom: 2rem;">
+      <!-- Bidding Action Card -->
+      <div class="card" id="bid-action-card">
+        <h2 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem;">Submit Competitive Bid</h2>
+        <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 1.25rem;" id="bid-guide-text">
+          Bid amount must be strictly greater than the current highest bid.
+        </p>
+
+        <form id="place-bid-form">
+          <div class="form-group">
+            <label class="form-label" for="bid-amount">Bid Amount (₹ per unit) *</label>
+            <div style="position: relative;">
+              <span style="position: absolute; left: 1rem; top: 0.75rem; font-weight: 700; color: var(--text-secondary);">₹</span>
+              <input type="number" id="bid-amount" step="0.01" class="form-control" style="padding-left: 2rem;" placeholder="0.00" required>
+            </div>
+            <div class="form-hint" id="min-bid-hint">Minimum allowed bid: -</div>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-lg" style="width: 100%;" id="place-bid-btn">
+            Place Bid
+          </button>
+        </form>
+
+        <div id="bid-notice" style="display: none; padding: 1rem; background: var(--bg); border-radius: var(--radius-md); text-align: center; margin-top: 1rem; font-size: 0.9rem; color: var(--text-secondary);"></div>
+      </div>
+
+      <!-- Produce & Quality Specifications -->
+      <div class="card">
+        <h2 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem;">Produce Details</h2>
+        <div style="display: flex; flex-direction: column; gap: 0.75rem; font-size: 0.95rem;">
+          <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed var(--border); padding-bottom: 0.5rem;">
+            <span style="color: var(--text-muted);">Quantity Available</span>
+            <strong id="spec-quantity">-</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed var(--border); padding-bottom: 0.5rem;">
+            <span style="color: var(--text-muted);">Category</span>
+            <strong id="spec-category">-</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed var(--border); padding-bottom: 0.5rem;">
+            <span style="color: var(--text-muted);">Farmer Origin</span>
+            <strong id="spec-origin">-</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed var(--border); padding-bottom: 0.5rem;">
+            <span style="color: var(--text-muted);">Auction Started</span>
+            <span id="spec-started">-</span>
+          </div>
+          <div style="display: flex; justify-content: space-between;">
+            <span style="color: var(--text-muted);">Auction Closing</span>
+            <span id="spec-closing">-</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Live Bids History Table -->
+    <section class="card" style="padding: 1.5rem;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <div>
+          <h2 style="font-size: 1.35rem; font-weight: 700;">Live Bidding History</h2>
+          <p style="color: var(--text-muted); font-size: 0.85rem;">Live polling every 3 seconds • Competing buyer identities masked</p>
+        </div>
+        <span class="badge badge-open" id="live-indicator" style="animation: pulse 2s infinite;">● LIVE</span>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Buyer</th>
+              <th>Bid Amount per Unit</th>
+              <th>Placed At</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="bids-tbody">
+            <tr>
+              <td colspan="4" style="text-align: center; padding: 2rem; color: var(--text-muted);">
+                Waiting for incoming bids...
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="js/api.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/auction.js"></script>
+</body>
+</html>

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Buyer Login – FairBid</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="navbar">
+    <div class="nav-container">
+      <a href="index.html" class="brand">
+        <svg class="brand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        FairBid
+      </a>
+      <nav class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="browse-produce.html">Browse</a>
+        <a href="farmer-login.html">Farmer Portal</a>
+        <a href="buyer-register.html" class="btn btn-secondary btn-sm">Register as Buyer</a>
+      </nav>
+    </div>
+  </header>
+
+  <main style="max-width: 480px; padding-top: 3rem;">
+    <div class="card" style="padding: 2.25rem;">
+      <div style="text-align: center; margin-bottom: 2rem;">
+        <span class="badge badge-sold" style="margin-bottom: 0.75rem;">Buyer Portal</span>
+        <h1 style="font-size: 1.75rem; font-weight: 800;">Welcome Back, Buyer</h1>
+        <p style="color: var(--text-secondary); font-size: 0.95rem; margin-top: 0.35rem;">
+          Sign in to place bids and track won auctions
+        </p>
+      </div>
+
+      <form id="login-form">
+        <div class="form-group">
+          <label class="form-label" for="email">Email Address</label>
+          <input type="email" id="email" class="form-control" placeholder="e.g. buyer1@fairbid.com" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="password">Password</label>
+          <input type="password" id="password" class="form-control" placeholder="••••••••" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;" id="login-submit">
+          Sign In as Buyer
+        </button>
+      </form>
+
+      <!-- Sample Credentials Quick-Fill (Viva & Testing Aid) -->
+      <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px dashed var(--border);">
+        <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.75rem;">
+          Quick Test Accounts (Password: Buyer@123)
+        </div>
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+          <button type="button" class="btn btn-secondary btn-sm" onclick="fillCreds('buyer1@fairbid.com', 'Buyer@123')">Buyer 1 (Priya Agro)</button>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="fillCreds('buyer2@fairbid.com', 'Buyer@123')">Buyer 2 (Apex Food)</button>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="fillCreds('buyer3@fairbid.com', 'Buyer@123')">Buyer 3 (Organic Fresh)</button>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="fillCreds('buyer4@fairbid.com', 'Buyer@123')">Buyer 4 (Global Export)</button>
+        </div>
+      </div>
+
+      <div style="text-align: center; margin-top: 1.5rem; font-size: 0.9rem; color: var(--text-secondary);">
+        Don't have an account? <a href="buyer-register.html" style="color: var(--primary); font-weight: 600;">Register as Buyer</a>
+      </div>
+    </div>
+  </main>
+
+  <script src="js/api.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/login.js"></script>
+</body>
+</html>
