@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FairBid – Transparent Agricultural Auctions</title>
+  <link rel="stylesheet" href="css/fairbid.css">
+  <script src="translations.js"></script>
+  <script src="voice.js"></script>
+</head>
+<body>
+  <!-- Header / Navigation -->
+  <header class="navbar">
+    <div class="nav-container">
+      <a href="index.html" class="brand">
+        <svg class="brand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+        </svg>
+        FairBid
+      </a>
+      <nav class="nav-links">
+        <a href="index.html" class="active" data-i18n="home">Home</a>
+        <a href="buyer.html" data-i18n="buyerMarketplace">Buyer Marketplace</a>
+        <a href="farmer_login.html" data-i18n="farmerPortal">Farmer Portal</a>
+        <select id="fairbidLangSelect" class="lang-select" onchange="setLanguage(this.value)">
+          <option value="en">English</option>
+          <option value="ta">தமிழ்</option>
+          <option value="hi">हिन्दी</option>
+        </select>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <main>
+    <section style="text-align: center; padding: 3.5rem 1rem 2.5rem; max-width: 850px; margin: 0 auto;">
+      <span class="badge badge-open" style="font-size: 0.85rem; padding: 0.4rem 1rem; margin-bottom: 1.25rem;">
+        🌾 Direct Farmer-to-Buyer Competitive Bidding
+      </span>
+      <h1 style="font-size: 2.75rem; font-weight: 800; color: var(--text-primary); line-height: 1.2; margin-bottom: 1.25rem;">
+        Empowering Farmers with <span style="color: var(--primary);">Transparent Market Prices</span>
+      </h1>
+      <p style="font-size: 1.15rem; color: var(--text-secondary); margin-bottom: 2.5rem; line-height: 1.7;">
+        List produce with your reserve minimum price. Let verified wholesale buyers compete to get you the highest price, backed by transparent auction rules and instant settlement.
+      </p>
+
+      <div style="display: flex; justify-content: center; gap: 1.25rem; flex-wrap: wrap;">
+        <a href="farmer_login.html" class="btn btn-primary btn-lg" style="min-width: 200px;">
+          👨‍🌾 Enter Farmer Portal
+        </a>
+        <a href="buyer.html" class="btn btn-secondary btn-lg" style="min-width: 200px;">
+          🛒 Enter Buyer Portal
+        </a>
+      </div>
+    </section>
+
+    <!-- Key Features Section -->
+    <section style="margin-top: 2rem; margin-bottom: 3.5rem;">
+      <h2 style="text-align: center; font-size: 1.75rem; font-weight: 700; margin-bottom: 2rem;">
+        How FairBid Protects Agricultural Producers
+      </h2>
+      <div class="grid-3">
+        <div class="card" style="text-align: center; padding: 2rem 1.5rem;">
+          <div style="width: 56px; height: 56px; border-radius: 50%; background: var(--primary-light); color: var(--primary); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.25rem; font-weight: 800; font-size: 1.25rem;">
+            1
+          </div>
+          <h3 style="font-size: 1.2rem; margin-bottom: 0.6rem;">List with Minimum Price (MSP)</h3>
+          <p style="color: var(--text-secondary); font-size: 0.95rem;">
+            You set the minimum reserve price per unit. Offers below your minimum are flagged, giving you absolute control over sale decisions.
+          </p>
+        </div>
+
+        <div class="card" style="text-align: center; padding: 2rem 1.5rem;">
+          <div style="width: 56px; height: 56px; border-radius: 50%; background: var(--accent-gold-light); color: var(--accent-gold); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.25rem; font-weight: 800; font-size: 1.25rem;">
+            2
+          </div>
+          <h3 style="font-size: 1.2rem; margin-bottom: 0.6rem;">Live Transparent Bidding</h3>
+          <p style="color: var(--text-secondary); font-size: 0.95rem;">
+            Registered buyers submit live bids. Price increments move strictly upward in real time, preventing broker cartels and price suppression.
+          </p>
+        </div>
+
+        <div class="card" style="text-align: center; padding: 2rem 1.5rem;">
+          <div style="width: 56px; height: 56px; border-radius: 50%; background: #EDE7F6; color: #512DA8; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.25rem; font-weight: 800; font-size: 1.25rem;">
+            3
+          </div>
+          <h3 style="font-size: 1.2rem; margin-bottom: 0.6rem;">Guaranteed Deal Settlement</h3>
+          <p style="color: var(--text-secondary); font-size: 0.95rem;">
+            Accept winning bids in one atomic transaction. Other pending bids are resolved and sale records are stored immutably in MySQL.
+          </p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <div style="max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+      <div>
+        <strong>FairBid</strong> – Transparent Agricultural Produce Auction Platform
+      </div>
+      <div>
+        Java 21 • Jakarta Servlet 6.0 • MySQL 8 • Apache Tomcat 10.1
+      </div>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

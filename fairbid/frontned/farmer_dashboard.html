@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Farmer Dashboard – FairBid</title>
+  <link rel="stylesheet" href="css/fairbid.css">
+  <script src="translations.js"></script>
+  <script src="voice.js"></script>
+</head>
+<body>
+  <!-- Header / Navigation -->
+  <header class="navbar">
+    <div class="nav-container">
+      <a href="index.html" class="brand">
+        <svg class="brand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+        </svg>
+        FairBid
+      </a>
+      <nav class="nav-links">
+        <a href="farmer_dashboard.html" class="active" data-i18n="farmerDashboard">Farmer Dashboard</a>
+        <a href="buyer_dashboard.html" data-i18n="buyerMarketplace">Buyer Marketplace</a>
+        
+        <!-- Language Selector -->
+        <select id="fairbidLangSelect" class="lang-select" onchange="setLanguage(this.value)" title="Choose Language">
+          <option value="en">English</option>
+          <option value="ta">தமிழ்</option>
+          <option value="hi">हिन्दी</option>
+        </select>
+
+        <!-- Voice Navigation Mic -->
+        <button id="voiceNavBtn" class="btn-voice" onclick="FairBidVoice.toggleVoiceCommands()" title="Voice Commands">
+          🎙️
+        </button>
+
+        <!-- Notification Bell -->
+        <div class="notif-container">
+          <button class="notif-bell-btn" onclick="toggleNotifDropdown()" title="Incoming Bid Notifications">
+            🔔
+            <span id="notifBadge" class="notif-badge" style="display:none;">0</span>
+          </button>
+          <div id="notifDropdown" class="notif-dropdown">
+            <div class="notif-header">
+              <span data-i18n="notifications">Notifications</span>
+              <button class="btn btn-secondary btn-sm" style="font-size:0.75rem; padding:0.2rem 0.5rem;" onclick="markAllNotificationsRead()" data-i18n="markAllRead">Mark All as Read</button>
+            </div>
+            <ul id="notifList" class="notif-list">
+              <li class="notif-empty" data-i18n="noNotifications">No new notifications.</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- User & Verification Slot -->
+        <div id="nav-user-slot" style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+          <span id="farmerVerifBadgeSlot"></span>
+          <button class="btn btn-secondary btn-sm" onclick="openVerifyFarmerModal()" style="font-size:0.8rem;" data-i18n="verifyIdentity">Verify ID</button>
+          <span class="user-badge" id="farmerBadge">👨‍🌾 Farmer</span>
+          <button class="btn btn-secondary btn-sm" onclick="logoutFarmer()" data-i18n="logOut">Log Out</button>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+      <div>
+        <h1 style="font-size: 2rem; font-weight: 800; color: var(--text-primary);" id="welcomeHeading">
+          Farmer Dashboard
+        </h1>
+        <p style="color: var(--text-secondary); font-size: 0.95rem;" id="farmerProfileSummary" data-i18n="farmerSummary">
+          Manage your produce lots, monitor incoming competitive bids, and accept winning offers.
+        </p>
+      </div>
+    </div>
+
+    <!-- Summary Statistics Grid -->
+    <section class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label" data-i18n="statTotalLots">Total Lots Listed</div>
+        <div class="stat-value" id="statTotalLots">0</div>
+      </div>
+      <div class="stat-card stat-gold">
+        <div class="stat-label" data-i18n="statOpenAuctions">Active Live Auctions</div>
+        <div class="stat-value" id="statOpenAuctions">0</div>
+      </div>
+      <div class="stat-card stat-blue">
+        <div class="stat-label" data-i18n="statSoldLots">Sold Lots</div>
+        <div class="stat-value" id="statSoldLots">0</div>
+      </div>
+    </section>
+
+    <!-- 2-Column Workspace: Add Produce & My Listed Crops -->
+    <div class="grid-2" style="align-items: start;">
+      
+      <!-- Left Column: Add Product Form -->
+      <div class="card" style="padding: 1.75rem;">
+        <div style="margin-bottom: 1.25rem;">
+          <span class="badge badge-open" style="margin-bottom: 0.4rem;" data-i18n="newProduceListing">New Produce Listing</span>
+          <h2 style="font-size: 1.35rem; font-weight: 700;" data-i18n="listCropTitle">List Crop for Competitive Auction</h2>
+          <p style="font-size: 0.85rem; color: var(--text-secondary);" data-i18n="listCropSubtitle">
+            Specify minimum reserve price per kg. Bids will never drop below your threshold.
+          </p>
+        </div>
+
+        <form id="productForm" onsubmit="addProduct(event)">
+          <div class="form-group">
+            <label class="form-label" for="cropName" data-i18n="selectCrop">Select Crop *</label>
+            <select id="cropName" class="form-control" required>
+              <option value="" data-i18n="chooseCrop">-- Choose Crop --</option>
+              <option value="Tomatoes">Tomatoes (தக்காளி / टमाटर)</option>
+              <option value="Potatoes">Potatoes (உருளைக்கிழங்கு / आलू)</option>
+              <option value="Onions">Onions (வெங்காயம் / प्याज)</option>
+              <option value="Wheat">Wheat (கோதுமை / गेहूं)</option>
+              <option value="Paddy/Rice">Paddy / Rice (நெல் / चावल)</option>
+            </select>
+          </div>
+
+          <div class="grid-2">
+            <div class="form-group">
+              <label class="form-label" for="quantity" data-i18n="quantityKg">Quantity (in Kg) *</label>
+              <input type="number" id="quantity" class="form-control" placeholder="e.g. 500" required min="1">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="minPrice" data-i18n="reservePriceMsp">Reserve Price / MSP (₹/Kg) *</label>
+              <input type="number" id="minPrice" class="form-control" placeholder="e.g. 22.00" required step="0.5" min="1">
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div class="form-group">
+              <label class="form-label" for="qualityGrade" data-i18n="qualityGrade">Quality Grade *</label>
+              <select id="qualityGrade" class="form-control" required>
+                <option value="Grade A">Grade A (Premium Export Quality)</option>
+                <option value="Grade B">Grade B (Standard Market Quality)</option>
+                <option value="Grade A+">Grade A+ (Certified Organic / Super Quality)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="location" data-i18n="locationState">Location / State *</label>
+              <input type="text" id="location" class="form-control" placeholder="e.g. Tamil Nadu" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="description" data-i18n="additionalNotes">Additional Notes (Optional)</label>
+            <input type="text" id="description" class="form-control" placeholder="e.g. Freshly harvested lot, moisture below 12%">
+          </div>
+
+          <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;" data-i18n="btnListProduce">
+            List Produce for Live Auction
+          </button>
+        </form>
+      </div>
+
+      <!-- Right Column: My Listed Crops Table -->
+      <div class="card" style="padding: 1.75rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+          <div>
+            <h2 style="font-size: 1.35rem; font-weight: 700;" data-i18n="myListedLots">My Listed Produce Lots</h2>
+            <p style="font-size: 0.85rem; color: var(--text-secondary);" data-i18n="myListedSubtitle">Direct lots submitted by your farmer ID</p>
+          </div>
+          <button class="btn btn-secondary btn-sm" onclick="loadFarmerCrops()" data-i18n="refresh">🔄 Refresh</button>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table">
+            <thead>
+              <tr>
+                <th data-i18n="cropLotCol">Crop Lot</th>
+                <th data-i18n="qtyCol">Qty</th>
+                <th data-i18n="mspCol">MSP (₹/kg)</th>
+                <th data-i18n="gradeRegionCol">Grade & Region</th>
+                <th data-i18n="statusCol">Status</th>
+                <th data-i18n="actionCol">Action</th>
+              </tr>
+            </thead>
+            <tbody id="farmerCropsTableBody">
+              <tr>
+                <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 2rem;">
+                  Loading your produce lots from database...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Section: Incoming Live Buyer Bids -->
+    <section class="card incoming-bids" style="margin-top: 2rem; padding: 1.75rem;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+        <div>
+          <h2 style="font-size: 1.35rem; font-weight: 700;" data-i18n="incomingBidsTitle">Incoming Live Buyer Bids</h2>
+          <p style="font-size: 0.85rem; color: var(--text-secondary);">Direct competitive offers submitted by buyers across India</p>
+        </div>
+        <button class="btn btn-secondary btn-sm" onclick="loadIncomingBids()" data-i18n="refreshBids">🔄 Refresh Bids</button>
+      </div>
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th data-i18n="cropLotCol">Crop</th>
+              <th data-i18n="buyerCol">Buyer</th>
+              <th data-i18n="bidAmountCol">Bid (₹)</th>
+              <th data-i18n="bidTimeCol">Submitted (IST)</th>
+              <th data-i18n="statusCol">Status</th>
+              <th data-i18n="actionCol">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="incomingBidsTableBody">
+            <tr><td colspan="6" style="text-align:center;color:var(--text-muted); padding:2rem;">Load bids to view pending offers.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <!-- MODAL 1: Revise MSP Modal -->
+  <div id="reviseMspModal" class="fb-modal">
+    <div class="fb-modal-content">
+      <div class="fb-modal-header">
+        <h3 style="font-size: 1.2rem; font-weight: 800;" data-i18n="reviseMspTitle">Revise Minimum Support Price (MSP)</h3>
+        <button class="fb-modal-close" onclick="closeReviseMspModal()">&times;</button>
+      </div>
+      <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1rem;">
+        Update the reserve price threshold for <strong id="reviseCropName">Lot</strong>. Incoming bids below this revised threshold will be marked as Below MSP.
+      </p>
+      <form onsubmit="submitReviseMsp(event)">
+        <div style="background: var(--bg); padding: 0.85rem 1rem; border-radius: var(--radius-md); margin-bottom: 1rem; display: flex; justify-content: space-between;">
+          <span data-i18n="currentMsp">Current MSP:</span>
+          <strong id="currentMspDisplay">₹0.00</strong>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="newMspInput" data-i18n="newMspLabel">New MSP (₹/kg) *</label>
+          <input type="number" id="newMspInput" class="form-control" placeholder="e.g. 26.50" step="0.5" min="1" required>
+        </div>
+        <div style="display: flex; gap: 0.75rem; margin-top: 1.25rem;">
+          <button type="submit" id="btnSubmitReviseMsp" class="btn btn-primary" style="flex: 1;" data-i18n="btnUpdateMsp">Update MSP</button>
+          <button type="button" class="btn btn-secondary" onclick="closeReviseMspModal()" data-i18n="btnClose">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL 2: Farmer Identity Verification (AgriStack) -->
+  <div id="verifyFarmerModal" class="fb-modal">
+    <div class="fb-modal-content">
+      <div class="fb-modal-header">
+        <h3 style="font-size: 1.2rem; font-weight: 800;" data-i18n="verifyFarmerId">AgriStack Farmer Verification</h3>
+        <button class="fb-modal-close" onclick="closeVerifyFarmerModal()">&times;</button>
+      </div>
+      <div style="background: #E8F5E9; border: 1px solid #C8E6C9; padding: 0.85rem; border-radius: var(--radius-md); margin-bottom: 1rem; font-size: 0.85rem; color: #1B5E20;">
+        <strong>Government Registry Integration:</strong>
+        <p style="margin-top:0.25rem;" data-i18n="demoModeNotice">
+          Demo Verification Mode is active for evaluation. Real AgriStack production access requires official government credentials.
+        </p>
+      </div>
+      <form onsubmit="submitFarmerVerification(event)">
+        <div class="form-group">
+          <label class="form-label" for="farmerVerifMode">Verification Mode</label>
+          <select id="farmerVerifMode" class="form-control">
+            <option value="demo">Demo Verification Mode (AgriStack Mock Sandbox)</option>
+            <option value="govt">Official AgriStack Gateway (Requires Production API Key)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="govtFarmerIdInput" data-i18n="govtFarmerIdLabel">Government Farmer Registry ID *</label>
+          <input type="text" id="govtFarmerIdInput" class="form-control" placeholder="e.g. AGRI-TN-987654" required>
+        </div>
+        <div class="form-group" style="display: flex; gap: 0.5rem; align-items: flex-start; margin-top: 1rem;">
+          <input type="checkbox" id="farmerConsentCheckbox" required style="margin-top: 0.25rem;">
+          <label for="farmerConsentCheckbox" style="font-size: 0.85rem; color: var(--text-secondary);" data-i18n="consentFarmer">
+            I give my explicit consent to verify my producer credentials with the Government AgriStack / State Farmer Registry.
+          </label>
+        </div>
+        <div style="display: flex; gap: 0.75rem; margin-top: 1.25rem;">
+          <button type="submit" id="btnSubmitFarmerVerif" class="btn btn-primary" style="flex: 1;" data-i18n="btnVerifyNow">Verify Identity Now</button>
+          <button type="button" class="btn btn-secondary" onclick="closeVerifyFarmerModal()" data-i18n="btnClose">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL 3: Voice Command Visual Feedback -->
+  <div id="voiceCommandModal" class="fb-modal">
+    <div class="fb-modal-content" style="text-align: center; max-width: 420px;">
+      <div style="font-size: 3rem; margin-bottom: 0.75rem; animation: pulse 1s infinite alternate;">🎙️</div>
+      <h3 style="font-size: 1.3rem; font-weight: 800; margin-bottom: 0.5rem;" data-i18n="voiceCommand">Voice Command</h3>
+      <p id="voiceStatusText" style="font-size: 1rem; color: var(--primary); font-weight: 600; min-height: 2.5rem;" data-i18n="listening">
+        Listening... Speak a command
+      </p>
+      <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.75rem;" data-i18n="voiceHelp">
+        Try: "Show incoming bids", "Show notifications", "Show my crops", "Read latest bid"
+      </p>
+      <button class="btn btn-secondary btn-sm" style="margin-top: 1rem;" onclick="FairBidVoice.toggleVoiceCommands()" data-i18n="btnClose">
+        Cancel
+      </button>
+    </div>
+  </div>
+
+  <div id="toast-container"></div>
+
+  <footer>
+    <div style="max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+      <div><strong>FairBid</strong> – Farmer Dashboard</div>
+      <div>Real-time Competitive Agricultural Bidding</div>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", async () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('demo') === 'farmer' && !getLoggedInFarmer()) {
+        sessionStorage.setItem("loggedInFarmer", JSON.stringify({ id: "ZZTEST_F101", name: "ZZTEST Farmer Ramesh", state: "Tamil Nadu", verificationStatus: "DEMO_VERIFIED", verificationType: "AgriStack" }));
+      }
+      const farmer = getLoggedInFarmer();
+      if (!farmer) {
+        window.location.href = "farmer_login.html";
+        return;
+      }
+
+      const farmerBadge = document.getElementById("farmerBadge");
+      if (farmerBadge) farmerBadge.textContent = `👨‍🌾 ${farmer.name || farmer.id}`;
+
+      const welcomeHeading = document.getElementById("welcomeHeading");
+      if (welcomeHeading) welcomeHeading.textContent = `Welcome, ${farmer.name || farmer.id}`;
+
+      const locInput = document.getElementById("location");
+      if (locInput && farmer.state) locInput.value = farmer.state;
+
+      // Update verification badge
+      updateFarmerProfileBadges();
+
+      // Load crops & incoming bids
+      await loadFarmerCrops();
+      await loadIncomingBids();
+
+      // Initial notifications load & start real-time polling (every 8s)
+      await loadFarmerNotifications();
+      setInterval(loadFarmerNotifications, 8000);
+      
+      // Request browser notification permission if available
+      if ("Notification" in window && Notification.permission === "default") {
+        Notification.requestPermission();
+      }
+    });
+
+    async function loadFarmerCrops() {
+      const farmer = getLoggedInFarmer();
+      if (!farmer) return;
+
+      const tbody = document.getElementById("farmerCropsTableBody");
+      const statTotal = document.getElementById("statTotalLots");
+      const statOpen = document.getElementById("statOpenAuctions");
+      const statSold = document.getElementById("statSoldLots");
+
+      const res = await sendGetRequest(`/api/crops?farmerId=${encodeURIComponent(farmer.id)}`);
+
+      if (!res || !res.success || !res.crops) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color: var(--status-unsold); padding: 2rem;">Failed to load crops from server.</td></tr>`;
+        return;
+      }
+
+      const crops = res.crops;
+      statTotal.textContent = crops.length;
+      statOpen.textContent = crops.filter(c => (c.status || '').toUpperCase() === 'OPEN').length;
+      statSold.textContent = crops.filter(c => (c.status || '').toUpperCase() === 'SOLD').length;
+
+      if (crops.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="6" style="text-align:center; color: var(--text-muted); padding: 2.5rem;">
+              No produce lots listed yet. Use the form on the left to add your first crop!
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = '';
+      crops.forEach(crop => {
+        const tr = document.createElement('tr');
+
+        const isSold = (crop.status || '').toUpperCase() === 'SOLD';
+        const statusBadge = isSold
+          ? `<span class="badge badge-sold">SOLD (₹${crop.agreedPrice || crop.minPrice})</span>`
+          : `<span class="badge badge-open">LIVE AUCTION</span>`;
+
+        const actionButtons = `
+          <div style="display:flex; gap:0.4rem; flex-wrap:wrap;">
+            <a href="auction_room.html?id=${crop.id}" class="btn ${isSold ? 'btn-secondary' : 'btn-primary'} btn-sm">
+              ${isSold ? 'Review Deal' : 'Enter Auction Room →'}
+            </a>
+            ${!isSold ? `<button class="btn btn-secondary btn-sm" onclick="openReviseMspModal(${crop.id}, ${crop.minPrice}, '${escapeHtml(crop.cropName)}')">✏️ Revise MSP</button>` : ''}
+          </div>
+        `;
+
+        const speechInfo = `${crop.cropName}, quantity ${crop.quantity} kg, minimum reserve price ${crop.minPrice} rupees per kg. Status: ${isSold ? 'Sold' : 'Live Auction'}.`;
+
+        tr.innerHTML = `
+          <td>
+            <strong>${escapeHtml(crop.cropName)}</strong>
+            <button class="tts-btn" title="Listen" onclick="FairBidVoice.speak('${speechInfo.replace(/'/g, "\\'")}')">🔊</button>
+            <div style="font-size:0.75rem; color:var(--text-muted);">#LOT-${crop.id}</div>
+          </td>
+          <td>${crop.quantity} kg</td>
+          <td>${formatCurrency(crop.minPrice)}/kg</td>
+          <td>${escapeHtml(crop.qualityGrade || 'Grade A')} • ${escapeHtml(crop.location)}</td>
+          <td>${statusBadge}</td>
+          <td>${actionButtons}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+  </script>
+</body>
+</html>

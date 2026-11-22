@@ -1,5 +1,32 @@
-target/
-backend/target/
+
+# Java build output
+**/target/
 *.class
+*.war
+
+# Logs
 *.log
+
+# Environment secrets
+.env
+.env.*
+!.env.example
+
+# Credentials and keys
+*.pem
+*.key
+
+# Node dependencies
+node_modules/
+
+# IDE files
+.idea/
+.vscode/
+
+# Temporary files
+*.tmp
+*.bak
+
+# OS files
 .DS_Store
+Thumbs.db

@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Farmer Auction Control Room – FairBid</title>
+  <link rel="stylesheet" href="css/fairbid.css">
+  <script src="translations.js"></script>
+  <script src="voice.js"></script>
+  <style>
+    .room-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    .bid-highlight {
+      font-weight: 800;
+      color: var(--primary);
+      font-size: 1.1rem;
+    }
+  </style>
+</head>
+<body>
+  <!-- Header / Navigation -->
+  <header class="navbar">
+    <div class="nav-container">
+      <a href="index.html" class="brand">
+        <svg class="brand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+        </svg>
+        FairBid
+      </a>
+      <nav class="nav-links">
+        <select id="fairbidLangSelect" class="lang-select" onchange="setLanguage(this.value)">
+          <option value="en">English</option>
+          <option value="ta">தமிழ்</option>
+          <option value="hi">हिन्दी</option>
+        </select>
+        <a href="farmer_dashboard.html">← Back to Farmer Dashboard</a>
+        <span class="user-badge" id="farmerBadge">👨‍🌾 Farmer</span>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <div class="room-header">
+      <div>
+        <h1 style="font-size: 1.85rem; font-weight: 800; color: var(--text-primary);">
+          Produce Lot Auction Room
+        </h1>
+        <p style="color: var(--text-secondary); font-size: 0.95rem;">
+          Real-time bidding desk. Review incoming wholesale offers and finalize the winning deal.
+        </p>
+      </div>
+      <div>
+        <span class="countdown-box" id="pollingStatus">🟢 Live Synchronized</span>
+      </div>
+    </div>
+
+    <!-- 2-Column Layout: Lot Details & Bids Desk -->
+    <div class="grid-2" style="align-items: start; margin-bottom: 2rem;">
+      
+      <!-- Left: Lot Overview Card -->
+      <div class="card" style="padding: 1.75rem;">
+        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.25rem;">
+          <img id="cropImage" src="assets/images/default-crop.svg" alt="Crop" style="width: 56px; height: 56px; object-fit: contain;">
+          <div>
+            <h2 id="displayCropName" style="font-size: 1.4rem; font-weight: 800; margin-bottom: 0.2rem;">Loading Produce...</h2>
+            <div id="displayLotId" style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">Lot #---</div>
+          </div>
+        </div>
+
+        <div style="border-top: 1px solid var(--border); padding-top: 1rem; margin-bottom: 1rem;">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 0.6rem;">
+            <span style="color: var(--text-secondary); font-size: 0.9rem;">Quantity:</span>
+            <strong id="displayQuantity">-</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 0.6rem;">
+            <span style="color: var(--text-secondary); font-size: 0.9rem;">Quality Grade:</span>
+            <strong id="displayGrade">-</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 0.6rem;">
+            <span style="color: var(--text-secondary); font-size: 0.9rem;">Farm Location:</span>
+            <strong id="displayLocation">-</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 0.6rem;">
+            <span style="color: var(--text-secondary); font-size: 0.9rem;">Reserve Minimum Price (MSP):</span>
+            <strong id="displayMsp" style="color: var(--accent);">-</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; padding-top: 0.75rem; border-top: 1px dashed var(--border);">
+            <span style="color: var(--text-secondary); font-size: 0.9rem;">Lot Status:</span>
+            <span id="displayStatus" class="badge badge-open">OPEN</span>
+          </div>
+        </div>
+
+        <div id="soldNotice" style="display: none; background: var(--status-sold-bg); color: var(--status-sold); padding: 1rem; border-radius: var(--radius-md); text-align: center; font-weight: 700; margin-top: 1rem;">
+          🎉 Lot has been SOLD & deal finalized!
+        </div>
+      </div>
+
+      <!-- Right: Highest Bid Spotlight Box -->
+      <div>
+        <div class="spotlight-box">
+          <div class="spotlight-label">Current Highest Valid Bid</div>
+          <div class="spotlight-amount" id="highestBidDisplay">₹0.00</div>
+          <div style="font-size: 0.95rem; opacity: 0.9; margin-top: 0.5rem;" id="highestBidderDisplay">
+            Awaiting first buyer offer...
+          </div>
+        </div>
+
+        <!-- Security / Ownership Notice -->
+        <div class="card" style="padding: 1.25rem; font-size: 0.85rem; color: var(--text-secondary); background: #FAFDF9; border-color: var(--primary-subtle);">
+          🛡️ <strong>FairBid Protected Settlement:</strong> Accepting a bid marks that bid ACCEPTED, automatically closes all other pending offers as REJECTED, and seals the auction in a single atomic MySQL database transaction.
+        </div>
+      </div>
+
+    </div>
+
+    <!-- SECTION: Incoming Buyer Bids Table -->
+    <section class="card" style="padding: 1.75rem;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+        <div>
+          <h2 style="font-size: 1.35rem; font-weight: 700;">Incoming Live Buyer Bids</h2>
+          <p style="font-size: 0.85rem; color: var(--text-secondary);" id="bidFeedSummary">Monitoring real-time buyer submissions</p>
+        </div>
+        <button class="btn btn-secondary btn-sm" onclick="refreshFarmerAuctionRoom()">🔄 Refresh Bids</button>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Bid ID</th>
+              <th>Buyer Company / Name</th>
+              <th>Buyer Email</th>
+              <th>Bid Price (₹/kg)</th>
+              <th>Submitted Time</th>
+              <th>Status</th>
+              <th>Action Decision</th>
+            </tr>
+          </thead>
+          <tbody id="farmerBidsTableBody">
+            <tr>
+              <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 2.5rem;">
+                Loading live bids...
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <div id="toast-container"></div>
+
+  <footer>
+    <div style="max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+      <div><strong>FairBid</strong> – Farmer Live Auction Room</div>
+      <div>Real-time Transactional Settlement</div>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+  <script>
+    let pollInterval = null;
+    let currentLotId = null;
+    let isCropSold = false;
+
+    document.addEventListener("DOMContentLoaded", async () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('demo') === 'farmer' && !getLoggedInFarmer()) {
+        sessionStorage.setItem("loggedInFarmer", JSON.stringify({ id: "ZZTEST_F101", name: "ZZTEST Farmer Ramesh", state: "Tamil Nadu" }));
+      }
+      const farmer = getLoggedInFarmer();
+      if (!farmer) {
+        window.location.href = "farmer_login.html";
+        return;
+      }
+
+      const farmerBadge = document.getElementById("farmerBadge");
+      if (farmerBadge) farmerBadge.textContent = `👨‍🌾 ${farmer.name || farmer.id}`;
+
+      currentLotId = parseInt(urlParams.get('id') || urlParams.get('cropId'), 10);
+
+      if (!currentLotId) {
+        // Fallback: fetch farmer's first crop
+        const res = await sendGetRequest(`/api/crops?farmerId=${encodeURIComponent(farmer.id)}`);
+        if (res && res.success && res.crops && res.crops.length > 0) {
+          currentLotId = res.crops[0].id;
+        } else {
+          alert("No crops found for your account. Please list a crop first.");
+          window.location.href = "farmer_dashboard.html";
+          return;
+        }
+      }
+
+      await refreshFarmerAuctionRoom();
+
+      // Poll every 3 seconds when visible
+      pollInterval = setInterval(() => {
+        if (document.visibilityState === 'visible' && !isCropSold) {
+          refreshFarmerAuctionRoom(true);
+        }
+      }, 3500);
+    });
+
+    window.addEventListener('beforeunload', () => {
+      if (pollInterval) clearInterval(pollInterval);
+    });
+
+    async function refreshFarmerAuctionRoom(isBackground = false) {
+      if (!currentLotId) return;
+
+      const pollingEl = document.getElementById("pollingStatus");
+      if (!isBackground && pollingEl) pollingEl.textContent = "⏳ Syncing...";
+
+      const res = await sendGetRequest(`/api/bids?cropId=${currentLotId}`);
+
+      if (!isBackground && pollingEl) pollingEl.textContent = "🟢 Live Synchronized";
+
+      if (!res || !res.success) {
+        console.error("Failed to load auction room data:", res);
+        return;
+      }
+
+      const crop = res.crop;
+      const bids = res.bids || [];
+
+      if (crop) {
+        document.getElementById("displayCropName").textContent = crop.cropName;
+        document.getElementById("displayLotId").textContent = `Lot #LOT-${crop.id}`;
+        document.getElementById("displayQuantity").textContent = `${crop.quantity} kg`;
+        document.getElementById("displayGrade").textContent = crop.qualityGrade || 'Grade A';
+        document.getElementById("displayLocation").textContent = crop.location;
+        document.getElementById("displayMsp").textContent = `${formatCurrency(crop.minPrice)} / kg`;
+        document.getElementById("cropImage").src = getCropImageSrc(crop.cropName);
+
+        const isSold = (crop.status || '').toUpperCase() === 'SOLD';
+        isCropSold = isSold;
+
+        const statusBadge = document.getElementById("displayStatus");
+        const soldNotice = document.getElementById("soldNotice");
+
+        if (isSold) {
+          statusBadge.className = "badge badge-sold";
+          statusBadge.textContent = "SOLD";
+          soldNotice.style.display = "block";
+          soldNotice.textContent = `🎉 Deal Finalized at ${formatCurrency(crop.agreedPrice || crop.minPrice)} / kg`;
+        } else {
+          statusBadge.className = "badge badge-open";
+          statusBadge.textContent = "AUCTION LIVE";
+          soldNotice.style.display = "none";
+        }
+      }
+
+      // Spotlight highest bid
+      const highestBidEl = document.getElementById("highestBidDisplay");
+      const highestBidderEl = document.getElementById("highestBidderDisplay");
+      const bidSummaryEl = document.getElementById("bidFeedSummary");
+
+      if (bids.length > 0) {
+        const topBid = bids[0]; // sorted DESC by backend
+        highestBidEl.textContent = formatCurrency(topBid.bidAmount);
+        highestBidderEl.textContent = `Top Bidder: ${topBid.buyerName || topBid.buyerEmail}`;
+        bidSummaryEl.textContent = `${bids.length} buyer bids recorded for this lot`;
+      } else {
+        highestBidEl.textContent = formatCurrency(crop ? crop.minPrice : 0);
+        highestBidderEl.textContent = "Awaiting first buyer offer above MSP...";
+        bidSummaryEl.textContent = "No bids placed yet for this produce lot";
+      }
+
+      // Render Bids Table
+      const tbody = document.getElementById("farmerBidsTableBody");
+      if (bids.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 2.5rem;">
+              No buyer bids placed yet. Bids from verified wholesale buyers will appear here in real time.
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = '';
+      bids.forEach(b => {
+        const tr = document.createElement('tr');
+        const st = (b.status || 'PENDING').toUpperCase();
+
+        let badgeClass = 'badge-pending';
+        let badgeText = 'PENDING';
+        if (st === 'ACCEPTED') {
+          badgeClass = 'badge-accepted';
+          badgeText = 'ACCEPTED DEAL';
+        } else if (st === 'REJECTED') {
+          badgeClass = 'badge-rejected';
+          badgeText = 'REJECTED';
+        }
+
+        let actionsHtml = '';
+        if (!isCropSold && st === 'PENDING') {
+          actionsHtml = `
+            <div style="display: flex; gap: 0.5rem;">
+              <button class="btn btn-primary btn-sm" onclick="confirmAccept(${b.cropId}, ${b.id}, '${escapeHtml(b.buyerName || b.buyerEmail)}', ${b.bidAmount})">
+                Accept Deal
+              </button>
+              <button class="btn btn-danger btn-sm" onclick="confirmReject(${b.cropId}, ${b.id}, '${escapeHtml(b.buyerName || b.buyerEmail)}')">
+                Reject
+              </button>
+            </div>
+          `;
+        } else if (st === 'ACCEPTED') {
+          actionsHtml = `<strong style="color: var(--primary);">Winning Deal</strong>`;
+        } else {
+          actionsHtml = `<span style="color: var(--text-muted);">Closed</span>`;
+        }
+
+        tr.innerHTML = `
+          <td>#BID-${b.id}</td>
+          <td><strong>${escapeHtml(b.buyerName || 'Buyer')}</strong></td>
+          <td>${escapeHtml(b.buyerEmail)}</td>
+          <td class="bid-highlight">${formatCurrency(b.bidAmount)}/kg</td>
+          <td>${formatDateTime(b.createdAtIso || b.createdAt)}</td>
+          <td><span class="badge ${badgeClass}">${badgeText}</span></td>
+          <td>${actionsHtml}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    async function confirmAccept(cropId, bidId, buyerName, amount) {
+      if (confirm(`Are you sure you want to ACCEPT the bid from ${buyerName} at ₹${amount}/kg? This will finalize the auction and mark your lot as SOLD.`)) {
+        await acceptBidAction(cropId, bidId);
+      }
+    }
+
+    async function confirmReject(cropId, bidId, buyerName) {
+      if (confirm(`Reject bid from ${buyerName}? The auction will stay open for other buyers.`)) {
+        await rejectBidAction(cropId, bidId);
+      }
+    }
+  </script>
+</body>
+</html>

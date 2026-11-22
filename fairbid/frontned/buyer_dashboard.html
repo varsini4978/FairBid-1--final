@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Buyer Marketplace & Dashboard – FairBid</title>
+  <link rel="stylesheet" href="css/fairbid.css">
+  <script src="translations.js"></script>
+  <script src="voice.js"></script>
+</head>
+<body>
+  <!-- Header / Navigation -->
+  <header class="navbar">
+    <div class="nav-container">
+      <a href="index.html" class="brand">
+        <svg class="brand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+        </svg>
+        FairBid
+      </a>
+      <nav class="nav-links">
+        <a href="buyer_dashboard.html" class="active" data-i18n="buyerMarketplace">Buyer Marketplace</a>
+        <a href="farmer_dashboard.html" data-i18n="farmerPortal">Farmer Portal</a>
+        
+        <!-- Language Selector -->
+        <select id="fairbidLangSelect" class="lang-select" onchange="setLanguage(this.value)" title="Choose Language">
+          <option value="en">English</option>
+          <option value="ta">தமிழ்</option>
+          <option value="hi">हिन्दी</option>
+        </select>
+
+        <!-- Voice Command Button -->
+        <button id="voiceNavBtn" class="btn-voice" onclick="FairBidVoice.toggleVoiceCommands()" title="Voice Commands">
+          🎙️
+        </button>
+
+        <div id="nav-user-slot" style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+          <span id="buyerVerifBadgeSlot"></span>
+          <button class="btn btn-secondary btn-sm" onclick="openVerifyBuyerModal()" style="font-size:0.8rem;" data-i18n="verifyIdentity">Verify ID</button>
+          <span class="user-badge" id="buyerBadge">🛒 Buyer</span>
+          <button class="btn btn-secondary btn-sm" onclick="logoutBuyer()" data-i18n="logOut">Log Out</button>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+      <div>
+        <h1 style="font-size: 2rem; font-weight: 800; color: var(--text-primary);" id="buyerHeading" data-i18n="produceMarketplaceHeading">
+          Produce Auctions Marketplace
+        </h1>
+        <p style="color: var(--text-secondary); font-size: 0.95rem;" data-i18n="produceMarketplaceSubtitle">
+          Discover direct farm produce lots listed across India. Submit competitive bids above reserve price.
+        </p>
+      </div>
+    </div>
+
+    <!-- Buyer Summary Cards -->
+    <section class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label" data-i18n="statBuyerTotalBids">Total Bids Placed</div>
+        <div class="stat-value" id="statBuyerTotalBids">0</div>
+      </div>
+      <div class="stat-card stat-gold">
+        <div class="stat-label" data-i18n="statBuyerPendingBids">Pending Active Bids</div>
+        <div class="stat-value" id="statBuyerPendingBids">0</div>
+      </div>
+      <div class="stat-card stat-blue">
+        <div class="stat-label" data-i18n="statBuyerWonBids">Auctions Won & Accepted</div>
+        <div class="stat-value" id="statBuyerWonBids">0</div>
+      </div>
+    </section>
+
+    <!-- SECTION 1: Search & Filter Produce -->
+    <section class="card" style="padding: 1.25rem 1.5rem; margin-bottom: 2rem;">
+      <div style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-end;">
+        <div style="flex: 1; min-width: 240px;">
+          <label class="form-label" for="filterCrop" data-i18n="searchByCrop">Search by Crop Name</label>
+          <div style="display: flex; gap: 0.35rem; align-items: center;">
+            <input type="text" id="filterCrop" class="form-control" placeholder="e.g. Tomatoes, Wheat, Onions...">
+            <button type="button" class="btn-voice" onclick="FairBidVoice.listenToInput('filterCrop', 'searchMicStatus', () => loadMarketplaceListings())" title="Speak crop name">
+              🎙️
+            </button>
+          </div>
+          <span id="searchMicStatus" style="font-size: 0.75rem; color: var(--primary);"></span>
+        </div>
+        <div style="flex: 1; min-width: 200px;">
+          <label class="form-label" for="filterState" data-i18n="filterByRegion">Filter by Region / State</label>
+          <select id="filterState" class="form-control">
+            <option value="" data-i18n="allRegions">All Regions</option>
+            <option value="Tamil Nadu">Tamil Nadu</option>
+            <option value="Karnataka">Karnataka</option>
+            <option value="Kerala">Kerala</option>
+            <option value="Andhra Pradesh">Andhra Pradesh</option>
+            <option value="Maharashtra">Maharashtra</option>
+            <option value="Punjab">Punjab</option>
+            <option value="Uttar Pradesh">Uttar Pradesh</option>
+          </select>
+        </div>
+        <div>
+          <button class="btn btn-primary" onclick="loadMarketplaceListings()" data-i18n="applyFilters">Apply Filters</button>
+          <button class="btn btn-secondary" onclick="resetFilters()" data-i18n="reset">Reset</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 2: Available Produce Listings Grid -->
+    <section style="margin-bottom: 3rem;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+        <h2 style="font-size: 1.35rem; font-weight: 700;" data-i18n="liveLotsInAuction">Live Produce Lots in Auction</h2>
+        <span id="activeLotsCount" style="font-size: 0.9rem; color: var(--text-muted);">0 lots available</span>
+      </div>
+
+      <div id="marketplaceGrid" class="grid-3">
+        <div style="grid-column: 1/-1; text-align: center; padding: 3rem; color: var(--text-muted);" class="card">
+          Loading live agricultural lots...
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 3: Buyer Bid & Purchase History -->
+    <section class="card" style="padding: 1.75rem;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+        <div>
+          <h2 style="font-size: 1.35rem; font-weight: 700;" data-i18n="myPlacedBidsTitle">My Placed Bids & Purchase History</h2>
+          <p style="font-size: 0.85rem; color: var(--text-secondary);" data-i18n="myPlacedBidsSubtitle">Live record of bids associated with your registered email</p>
+        </div>
+        <button class="btn btn-secondary btn-sm" onclick="loadBuyerBidHistory()" data-i18n="refreshBids">🔄 Refresh Bids</button>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th data-i18n="bidIdCol">Bid ID</th>
+              <th data-i18n="produceLotColBuyer">Produce Lot</th>
+              <th data-i18n="qtyCol">Quantity</th>
+              <th data-i18n="yourOfferCol">Your Offer (₹/kg)</th>
+              <th data-i18n="bidTimeCol">Submitted (IST)</th>
+              <th data-i18n="lotStatusCol">Lot Status</th>
+              <th data-i18n="bidStatusCol">Bid Status</th>
+              <th data-i18n="actionCol">Action</th>
+            </tr>
+          </thead>
+          <tbody id="buyerBidsTableBody">
+            <tr>
+              <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 2rem;">
+                Loading your bidding history...
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <!-- MODAL: Buyer Identity Verification (Aadhaar e-KYC) -->
+  <div id="verifyBuyerModal" class="fb-modal">
+    <div class="fb-modal-content">
+      <div class="fb-modal-header">
+        <h3 style="font-size: 1.2rem; font-weight: 800;" data-i18n="verifyAadhaar">Aadhaar e-KYC Verification</h3>
+        <button class="fb-modal-close" onclick="closeVerifyBuyerModal()">&times;</button>
+      </div>
+      <div style="background: #E8F5E9; border: 1px solid #C8E6C9; padding: 0.85rem; border-radius: var(--radius-md); margin-bottom: 1rem; font-size: 0.85rem; color: #1B5E20;">
+        <strong>UIDAI Compliant Verification:</strong>
+        <p style="margin-top:0.25rem;" data-i18n="demoModeNotice">
+          Demo Verification Mode is active for evaluation. Full UIDAI production authentication requires government enterprise authorization.
+        </p>
+      </div>
+      <form onsubmit="submitBuyerVerification(event)">
+        <div class="form-group">
+          <label class="form-label" for="buyerVerifMode">Verification Mode</label>
+          <select id="buyerVerifMode" class="form-control">
+            <option value="demo">Demo Verification Mode (UIDAI Mock Sandbox)</option>
+            <option value="govt">Official UIDAI e-KYC Gateway (Requires Authorized AUA)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="aadhaarLast4Input" data-i18n="aadhaarLast4">Last 4 Digits of Aadhaar *</label>
+          <div style="display:flex; align-items:center; gap:0.5rem;">
+            <span style="font-weight:700; color:var(--text-muted); letter-spacing:2px;">XXXX-XXXX-</span>
+            <input type="text" id="aadhaarLast4Input" class="form-control" maxlength="4" placeholder="1234" style="max-width:110px;" required pattern="\d{4}">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="aadhaarOtpInput" data-i18n="enterOtp">Enter 6-digit OTP (use 123456 for Demo) *</label>
+          <input type="text" id="aadhaarOtpInput" class="form-control" maxlength="6" placeholder="123456" required>
+        </div>
+        <div class="form-group" style="display: flex; gap: 0.5rem; align-items: flex-start; margin-top: 1rem;">
+          <input type="checkbox" id="buyerConsentCheckbox" required style="margin-top: 0.25rem;">
+          <label for="buyerConsentCheckbox" style="font-size: 0.85rem; color: var(--text-secondary);" data-i18n="consentAadhaar">
+            I give my explicit consent to verify my identity via Aadhaar OTP authentication according to UIDAI compliance standards.
+          </label>
+        </div>
+        <div style="display: flex; gap: 0.75rem; margin-top: 1.25rem;">
+          <button type="submit" id="btnSubmitBuyerVerif" class="btn btn-primary" style="flex: 1;" data-i18n="btnVerifyNow">Verify Identity Now</button>
+          <button type="button" class="btn btn-secondary" onclick="closeVerifyBuyerModal()" data-i18n="btnClose">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: Voice Command Feedback -->
+  <div id="voiceCommandModal" class="fb-modal">
+    <div class="fb-modal-content" style="text-align: center; max-width: 420px;">
+      <div style="font-size: 3rem; margin-bottom: 0.75rem; animation: pulse 1s infinite alternate;">🎙️</div>
+      <h3 style="font-size: 1.3rem; font-weight: 800; margin-bottom: 0.5rem;" data-i18n="voiceCommand">Voice Command</h3>
+      <p id="voiceStatusText" style="font-size: 1rem; color: var(--primary); font-weight: 600; min-height: 2.5rem;" data-i18n="listening">
+        Listening... Speak a command
+      </p>
+      <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.75rem;" data-i18n="voiceHelp">
+        Try: "Open marketplace", "Show incoming bids", "Read latest bid"
+      </p>
+      <button class="btn btn-secondary btn-sm" style="margin-top: 1rem;" onclick="FairBidVoice.toggleVoiceCommands()" data-i18n="btnClose">
+        Cancel
+      </button>
+    </div>
+  </div>
+
+  <div id="toast-container"></div>
+
+  <footer>
+    <div style="max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+      <div><strong>FairBid</strong> – Buyer Marketplace</div>
+      <div>Direct Farm Produce Sourcing</div>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", async () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('demo') === 'buyer' && !getLoggedInBuyer()) {
+        sessionStorage.setItem("loggedInBuyer", JSON.stringify({ email: "zztest_buyer1@example.com", name: "ZZTEST Metro Organics", category: "Trader", verificationStatus: "DEMO_VERIFIED", verificationType: "Aadhaar e-KYC" }));
+      }
+      const buyer = getLoggedInBuyer();
+      if (!buyer) {
+        window.location.href = "buyer.html";
+        return;
+      }
+
+      const buyerBadge = document.getElementById("buyerBadge");
+      if (buyerBadge) buyerBadge.textContent = `🛒 ${buyer.name || buyer.email}`;
+
+      updateBuyerProfileBadges();
+
+      await Promise.all([
+        loadMarketplaceListings(),
+        loadBuyerBidHistory()
+      ]);
+    });
+
+    async function resetFilters() {
+      document.getElementById("filterCrop").value = "";
+      document.getElementById("filterState").value = "";
+      await loadMarketplaceListings();
+    }
+
+    async function loadMarketplaceListings() {
+      const grid = document.getElementById("marketplaceGrid");
+      const cropSearch = document.getElementById("filterCrop").value.trim();
+      const stateFilter = document.getElementById("filterState").value.trim();
+
+      const params = new URLSearchParams();
+      if (cropSearch) params.append("crop", cropSearch);
+      if (stateFilter) params.append("location", stateFilter);
+
+      const res = await sendGetRequest(`/api/crops?${params.toString()}`);
+      if (!res || !res.success || !res.crops) {
+        grid.innerHTML = `
+          <div style="grid-column: 1/-1; text-align: center; padding: 2rem; color: var(--status-unsold);" class="card">
+            Failed to load produce listings: ${(res && res.message) || 'Server error'}
+          </div>
+        `;
+        return;
+      }
+
+      const crops = res.crops;
+      document.getElementById("activeLotsCount").textContent = `${crops.length} lots available`;
+
+      if (crops.length === 0) {
+        grid.innerHTML = `
+          <div style="grid-column: 1/-1; text-align: center; padding: 3rem; color: var(--text-muted);" class="card">
+            No produce lots match your search criteria. Try clearing filters.
+          </div>
+        `;
+        return;
+      }
+
+      grid.innerHTML = '';
+      crops.forEach(crop => {
+        const card = document.createElement("div");
+        card.className = "card spotlight-card";
+        const speechCard = `${crop.cropName}, reserve price ${crop.minPrice} rupees per kg. Location ${crop.location}, quantity ${crop.quantity} kg.`;
+
+        card.innerHTML = `
+          <div class="crop-avatar-wrap">
+            <img src="${getCropImageSrc(crop.cropName)}" alt="${escapeHtml(crop.cropName)}" class="crop-avatar">
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
+            <div>
+              <span class="badge badge-open">LIVE AUCTION</span>
+              <h3 style="font-size: 1.25rem; font-weight: 700; margin-top: 0.35rem;">
+                ${escapeHtml(crop.cropName)}
+                <button class="tts-btn" title="Listen" onclick="FairBidVoice.speak('${speechCard.replace(/'/g, "\\'")}')">🔊</button>
+              </h3>
+              <p style="font-size: 0.8rem; color: var(--text-muted);">
+                Producer: ${escapeHtml(crop.farmerName || crop.farmerId)} • #LOT-${crop.id}
+              </p>
+            </div>
+            <div style="text-align: right;">
+              <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">Reserve Price / MSP</div>
+              <div style="font-size: 1.35rem; font-weight: 800; color: var(--primary);">
+                ${formatCurrency(crop.minPrice)}<span style="font-size: 0.85rem; font-weight: 500;">/kg</span>
+              </div>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem; margin-bottom: 1.25rem; font-size: 0.85rem; background: var(--bg); padding: 0.75rem; border-radius: var(--radius-sm);">
+            <div><strong>Qty:</strong> ${crop.quantity} kg</div>
+            <div><strong>Grade:</strong> ${escapeHtml(crop.qualityGrade || 'Grade A')}</div>
+            <div style="grid-column: 1 / -1;"><strong>Location:</strong> ${escapeHtml(crop.location)}</div>
+          </div>
+
+          <div style="display: flex; gap: 0.5rem;">
+            <a href="buyer_auction_room.html?id=${crop.id}" class="btn btn-primary" style="flex: 1; text-align: center; text-decoration: none;">
+              Enter Live Auction Floor →
+            </a>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    async function loadBuyerBidHistory() {
+      const buyer = getLoggedInBuyer();
+      if (!buyer) return;
+
+      const tbody = document.getElementById("buyerBidsTableBody");
+      const statTotal = document.getElementById("statBuyerTotalBids");
+      const statPending = document.getElementById("statBuyerPendingBids");
+      const statWon = document.getElementById("statBuyerWonBids");
+
+      const res = await sendGetRequest(`/api/bids?buyerEmail=${encodeURIComponent(buyer.email)}`);
+
+      if (!res || !res.success || !res.bids) {
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--status-unsold); padding: 2rem;">Failed to load bid history.</td></tr>`;
+        return;
+      }
+
+      const bids = res.bids;
+      statTotal.textContent = bids.length;
+      statPending.textContent = bids.filter(b => (b.status || '').toUpperCase() === 'PENDING').length;
+      statWon.textContent = bids.filter(b => (b.status || '').toUpperCase() === 'ACCEPTED').length;
+
+      if (bids.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 2.5rem;">
+              You have not placed any bids yet. Explore the marketplace above to start bidding!
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = '';
+      bids.forEach(b => {
+        const tr = document.createElement('tr');
+        const st = (b.status || 'PENDING').toUpperCase();
+
+        let badgeClass = 'badge-pending';
+        let badgeLabel = 'PENDING';
+        if (st === 'ACCEPTED') {
+          badgeClass = 'badge-accepted';
+          badgeLabel = 'WON & ACCEPTED 🎉';
+        } else if (st === 'REJECTED') {
+          badgeClass = 'badge-rejected';
+          badgeLabel = 'REJECTED / OUTBID';
+        }
+
+        const cropSt = (b.cropStatus || 'OPEN').toUpperCase();
+        const cropBadge = cropSt === 'SOLD'
+          ? `<span class="badge badge-sold">LOT SOLD</span>`
+          : `<span class="badge badge-open">OPEN</span>`;
+
+        const speechBid = `Bid on ${b.cropName}, your offer ${b.bidAmount} rupees per kg. Status: ${badgeLabel}.`;
+
+        tr.innerHTML = `
+          <td>#BID-${b.id}</td>
+          <td>
+            <strong>${escapeHtml(b.cropName || 'Produce Lot #' + b.cropId)}</strong>
+            <button class="tts-btn" title="Listen" onclick="FairBidVoice.speak('${speechBid.replace(/'/g, "\\'")}')">🔊</button>
+          </td>
+          <td>${b.quantity ? b.quantity + ' kg' : '-'}</td>
+          <td style="font-weight: 700; color: var(--primary);">${formatCurrency(b.bidAmount)}/kg</td>
+          <td style="font-size: 0.85rem; color: var(--text-secondary);">${formatDateTime(b.createdAtIso || b.createdAt)}</td>
+          <td>${cropBadge}</td>
+          <td><span class="badge ${badgeClass}">${badgeLabel}</span></td>
+          <td>
+            <a href="buyer_auction_room.html?id=${b.cropId}" class="btn btn-secondary btn-sm">
+              View Auction Floor
+            </a>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+  </script>
+</body>
+</html>

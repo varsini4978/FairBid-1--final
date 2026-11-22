@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Buyer Portal – FairBid</title>
+  <link rel="stylesheet" href="css/fairbid.css">
+  <script src="translations.js"></script>
+  <script src="voice.js"></script>
+  <style>
+    .auth-container {
+      max-width: 480px;
+      margin: 2.5rem auto;
+    }
+    .hidden { display: none; }
+    .msg-error {
+      color: #D32F2F;
+      font-size: 0.85rem;
+      margin-top: 0.5rem;
+      display: none;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <!-- Header / Navigation -->
+  <header class="navbar">
+    <div class="nav-container">
+      <a href="index.html" class="brand">
+        <svg class="brand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+        </svg>
+        FairBid
+      </a>
+      <nav class="nav-links">
+        <a href="index.html" data-i18n="home">Home</a>
+        <a href="buyer.html" class="active" data-i18n="buyerPortal">Buyer Portal</a>
+        <a href="farmer_login.html" data-i18n="farmerPortal">Farmer Portal</a>
+        <select id="fairbidLangSelect" class="lang-select" onchange="setLanguage(this.value)">
+          <option value="en">English</option>
+          <option value="ta">தமிழ்</option>
+          <option value="hi">हिन्दी</option>
+        </select>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <div class="auth-container">
+      <div class="card" style="padding: 2.25rem;">
+        <div style="text-align: center; margin-bottom: 1.5rem;">
+          <span class="badge badge-open" style="margin-bottom: 0.5rem;">Buyer Portal</span>
+          <h1 style="font-size: 1.75rem; font-weight: 800; color: var(--text-primary);">
+            Wholesale Buyer Sign In
+          </h1>
+          <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.25rem;">
+            Access direct produce auctions and competitive bidding rounds
+          </p>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="tabs-nav" style="justify-content: center;">
+          <button id="loginTabBtn" class="tab-button active" onclick="switchTab('login')">Sign In</button>
+          <button id="registerTabBtn" class="tab-button" onclick="switchTab('register')">Register as Buyer</button>
+        </div>
+
+        <!-- LOGIN FORM -->
+        <form id="loginForm" onsubmit="handleLogin(event)">
+          <div class="form-group">
+            <label class="form-label" for="loginEmail">Registered Email Address *</label>
+            <input type="email" id="loginEmail" class="form-control" placeholder="buyer@example.com" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="loginPassword">Password *</label>
+            <input type="password" id="loginPassword" class="form-control" placeholder="••••••••" required>
+          </div>
+          <div id="loginError" class="msg-error">Invalid email or password. Please register if you do not have an account.</div>
+          <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 0.75rem;">
+            Sign In to Buyer Dashboard →
+          </button>
+        </form>
+
+        <!-- REGISTER FORM -->
+        <form id="registerForm" class="hidden" onsubmit="handleRegister(event)">
+          <div class="form-group">
+            <label class="form-label" for="regName">Full Name / Business Entity *</label>
+            <input type="text" id="regName" class="form-control" placeholder="e.g. Ramesh Traders / FreshMart Ltd." required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="regEmail">Email Address (Login ID) *</label>
+            <input type="email" id="regEmail" class="form-control" placeholder="buyer@example.com" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="regPassword">Create Password *</label>
+            <input type="password" id="regPassword" class="form-control" placeholder="••••••••" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="buyerCategory">Buyer Business Category *</label>
+            <select id="buyerCategory" class="form-control" onchange="updateCategoryFields()" required>
+              <option value="">-- Select Category --</option>
+              <option value="individual">A. Individual Direct Buyer</option>
+              <option value="trader">B. Trader / Wholesaler</option>
+              <option value="retailer">C. Retail Grocery Chain</option>
+              <option value="food_company">D. Food Processing Enterprise</option>
+            </select>
+          </div>
+
+          <!-- Dynamic Document Requirement -->
+          <div class="form-group" id="docFieldGroup" style="display: none;">
+            <label class="form-label" id="docLabel" for="docInput">Verification Document Number *</label>
+            <input type="text" id="docInput" class="form-control" placeholder="Enter identification number">
+          </div>
+
+          <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 0.75rem;">
+            Create Buyer Account
+          </button>
+        </form>
+
+        <div style="text-align: center; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border);">
+          <a href="index.html" style="color: var(--text-muted); font-size: 0.85rem; text-decoration: none;">
+            ← Back to Portal Selection
+          </a>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <div id="toast-container"></div>
+
+  <footer>
+    <div style="max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+      <div><strong>FairBid</strong> – Buyer Authentication</div>
+      <div>Java Servlets • MySQL • JDBC</div>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+  <script>
+    function switchTab(tab) {
+      const loginForm = document.getElementById("loginForm");
+      const registerForm = document.getElementById("registerForm");
+      const loginTabBtn = document.getElementById("loginTabBtn");
+      const registerTabBtn = document.getElementById("registerTabBtn");
+      const loginErr = document.getElementById("loginError");
+
+      if (loginErr) loginErr.style.display = "none";
+
+      if (tab === 'login') {
+        loginForm.classList.remove("hidden");
+        registerForm.classList.add("hidden");
+        loginTabBtn.classList.add("active");
+        registerTabBtn.classList.remove("active");
+      } else {
+        loginForm.classList.add("hidden");
+        registerForm.classList.remove("hidden");
+        registerTabBtn.classList.add("active");
+        loginTabBtn.classList.remove("active");
+      }
+    }
+
+    function updateCategoryFields() {
+      const category = document.getElementById('buyerCategory').value;
+      const docGroup = document.getElementById('docFieldGroup');
+      const docLabel = document.getElementById('docLabel');
+      const docInput = document.getElementById('docInput');
+
+      if (!category) {
+        docGroup.style.display = 'none';
+        docInput.required = false;
+        return;
+      }
+
+      docGroup.style.display = 'block';
+      docInput.required = true;
+
+      if (category === 'individual') {
+        docLabel.textContent = "Government Photo ID (Voter ID / Aadhaar) *";
+        docInput.placeholder = "Enter 12-digit Aadhaar or Voter ID number";
+      } else if (category === 'trader') {
+        docLabel.textContent = "Business Tax ID (PAN / GSTIN) *";
+        docInput.placeholder = "Enter 15-digit GSTIN or PAN";
+      } else if (category === 'retailer') {
+        docLabel.textContent = "Shop & Establishment License Number *";
+        docInput.placeholder = "Enter Trade License / Registration ID";
+      } else if (category === 'food_company') {
+        docLabel.textContent = "FSSAI License / Corporate CIN *";
+        docInput.placeholder = "Enter 14-digit FSSAI License Number";
+      }
+    }
+  </script>
+</body>
+</html>
